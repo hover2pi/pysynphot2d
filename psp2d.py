@@ -13,6 +13,7 @@ Joe Filippazzo, 2017-12-21
 """
 import numpy as np
 import pysynphot as ps
+import matplotlib.pyplot as plt
 
 class ArraySpectra(object):
     """
@@ -31,10 +32,13 @@ class ArraySpectra(object):
         
         Example
         -------
-        Dump a ModelGrid dict directly into it like so:
-        
-        grid = ExoCTK.core.ModelGrid(os.environ['MODELGRID_DIR'], resolution=100, Teff_rng=(3400,3500), logg_rng=(4.5,5.5), FeH_rng=(0,0),wave_rng=(0.8,2.5))
-        spec2D = pysynphot2d.psp2d.ArraySpectra(**grid.get(3500, 5, 0))
+        import os
+        import ExoCTK
+        import pysynphot2d
+        grid = ExoCTK.core.ModelGrid(os.environ['MODELGRID_DIR'], resolution=100, Teff_rng=(3400,3500), logg_rng=(4.5,5.5), FeH_rng=(0,0), wave_rng=(0.8,2.5))
+        model = grid.get(3500, 5, 0)
+        model['wave'] *= 10000
+        spec2D = pysynphot2d.psp2d.ArraySpectra(**model)
         """
         # Create object for each 1D spectrum
         self.spectra = [ps.ArraySpectrum(wave, f, name=n) for n,f in enumerate(flux)]
@@ -90,6 +94,27 @@ class ArraySpectra(object):
         """
         return np.array([getattr(data1D, attr)(*args, **kwargs) for data1D in self.spectra])
         
+    def plot(self, idx, param=''):
+        """
+        Plot the spectrum
+        
+        Parameters
+        ----------
+        idx: int
+            The index of the spectrum to plot
+        param: str
+            The name of the parameter to print
+        """
+        obs = self.spectra[idx]
+        if param:
+            p = getattr(self, param)
+            plt.plot(obs.wave, obs.flux, label='{} @ {} = {}'.format(obs.name,param,p[idx]))
+        else:
+            plt.plot(obs.wave, obs.flux, label=obs.name)
+            
+        plt.xlabel(obs.waveunits)
+        plt.ylabel(obs.fluxunits)
+        plt.legend(loc=0)
         
 class Observations(object):
     """
@@ -108,10 +133,16 @@ class Observations(object):
         
         Example
         -------
+        import os
+        import ExoCTK
+        import pysynphot
+        import pysynphot2d
         grid = ExoCTK.core.ModelGrid(os.environ['MODELGRID_DIR'], resolution=100, Teff_rng=(3400,3500), logg_rng=(4.5,5.5), FeH_rng=(0,0),wave_rng=(0.8,2.5))
-        spec2D = pysynphot2d.psp2d.ArraySpectra(**grid.get(3500, 5, 0))
+        model = grid.get(3500, 5, 0)
+        model['wave'] *= 10000
+        spec2D = pysynphot2d.psp2d.ArraySpectra(**model)
         bp = pysynphot.ObsBandpass('wfc3,ir,g141')
-        obs = pysynphot2d.psp2d.Observations(O, bp)
+        obs = pysynphot2d.psp2d.Observations(spec2D, bp)
         """
         # Create object for each 1D spectrum
         self.spectra = [ps.Observation(spec, band) for spec in spec2D.spectra]
@@ -166,3 +197,19 @@ class Observations(object):
             The vectorized results
         """
         return np.array([getattr(data1D, attr)(*args, **kwargs) for data1D in self.spectra])
+        
+    def plot(self, idx):
+        """
+        Plot the observation
+        
+        Parameters
+        ----------
+        idx: int
+            The index of the spectrum to plot
+        """
+        obs = self.spectra[idx]
+        plt.plot(obs.wave, obs.flux, label='native, {}'.format(obs.name))
+        plt.step(obs.binwave, obs.binflux, label='binned, {}'.format(obs.name))
+        plt.xlabel(obs.waveunits)
+        plt.ylabel(obs.fluxunits)
+        plt.legend(loc=0)
