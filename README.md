@@ -6,10 +6,7 @@ This notebook is a demonstration of the `pysynphot2d` wrapper which vectorizes t
 
 ```python
 %matplotlib inline
-
-import os
 import numpy as np
-import ExoCTK
 import pysynphot as ps
 import matplotlib.pyplot as plt
 from pysynphot2d import psp2d
