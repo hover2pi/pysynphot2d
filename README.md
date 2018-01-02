@@ -39,11 +39,11 @@ Now let's do some method calls as we would for a `pysynphot.ArraySpectrum` objec
 
 ```python
 # Sample each spectrum at the given wavelength
-sampled_spectra = toy2D.sample(12345)
+sampled_spectra = toy2D.sample(6789)
 print('Samples:',sampled_spectra)
 ```
 
-    Samples: [ 19.  39.  59.  79.  99.]
+    Samples: [ 13.24775  33.24775  53.24775  73.24775  93.24775]
 
 
 
